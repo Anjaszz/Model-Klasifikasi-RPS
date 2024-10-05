@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Classification</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Image Classification with TensorFlow.js</h1>
+        <input type="file" id="imageUpload" accept="image/*">
+        <button id="predictButton">Predict</button>
+        <div id="result"></div>
+    </div>
+    
+    <script>
+        let model;
+
+        async function loadModel() {
+            model = await tf.loadLayersModel('model_js/model.json'); // Sesuaikan dengan path model Anda
+            console.log("Model loaded");
+        }
+
+        async function predict() {
+            const imageElement = document.getElementById("imageUpload").files[0];
+
+            if (!imageElement) {
+                alert("Please upload an image!");
+                return;
+            }
+
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(imageElement);
+            img.onload = async function() {
+                const tensorImg = tf.browser.fromPixels(img).resizeNearestNeighbor([100, 150]).expandDims(0).toFloat().div(255);
+                const predictions = await model.predict(tensorImg).data();
+                const classNames = ['paper', 'rock', 'scissors'];
+                const predictedClass = classNames[predictions.indexOf(Math.max(...predictions))];
+
+                document.getElementById("result").innerText = "Predicted Class: " + predictedClass;
+            };
+        }
+
+        document.getElementById("predictButton").onclick = predict;
+
+        // Memuat model saat halaman dibuka
+        window.onload = loadModel;
+    </script>
+</body>
+</html>
